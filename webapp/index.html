@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickleball AI Court Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🏓 Pickleball AI</h1>
+                <div class="header-controls">
+                    <div class="connection-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Connecting...</span>
+                    </div>
+                    <button id="adminLoginBtn" class="btn btn-secondary">Admin</button>
+                    <button id="settingsBtn" class="btn btn-secondary">Settings</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Court Grid -->
+            <div class="courts-grid" id="courtsGrid">
+                <!-- Courts will be dynamically added here -->
+            </div>
+
+            <!-- Live Feed Panel -->
+            <div class="live-feed-panel" id="liveFeedPanel">
+                <div class="panel-header">
+                    <h3>Live Feed</h3>
+                    <button class="close-btn" id="closeLiveFeed">&times;</button>
+                </div>
+                <div class="live-feed-content">
+                    <div class="feed-main">
+                        <div class="camera-feed" id="cameraFeed">
+                            <div class="feed-placeholder">Select a camera to view live feed</div>
+                        </div>
+                        <div class="decision-panel" id="decisionPanel">
+                            <div class="decision-header">
+                                <h4>Latest Decision</h4>
+                                <span class="decision-badge" id="decisionBadge">No Decision</span>
+                            </div>
+                            <div class="ball-zoom" id="ballZoom">
+                                <div class="zoom-placeholder">Ball detection will appear here</div>
+                            </div>
+                            <div class="decision-info">
+                                <div class="info-item">
+                                    <span class="label">Ball Position:</span>
+                                    <span class="value" id="ballPosition">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Confidence:</span>
+                                    <span class="value" id="ballConfidence">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Timestamp:</span>
+                                    <span class="value" id="decisionTimestamp">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feed-controls">
+                        <button class="btn btn-primary" id="replay5Btn">5s Replay</button>
+                        <button class="btn btn-primary" id="replay10Btn">10s Replay</button>
+                        <button class="btn btn-secondary" id="zoomBtn">Toggle Zoom</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring Panel -->
+            <div class="scoring-panel" id="scoringPanel">
+                <div class="panel-header">
+                    <h3>Match Scoring</h3>
+                    <button class="close-btn" id="closeScoringPanel">&times;</button>
+                </div>
+                <div class="scoring-content">
+                    <div class="match-info">
+                        <div class="form-group">
+                            <label for="matchTitle">Match Title:</label>
+                            <input type="text" id="matchTitle" placeholder="Team A vs Team B">
+                        </div>
+                        <div class="form-group">
+                            <label for="matchDate">Date:</label>
+                            <input type="date" id="matchDate">
+                        </div>
+                    </div>
+                    
+                    <div class="score-display">
+                        <div class="team-score">
+                            <h4>Team A</h4>
+                            <div class="score-grid">
+                                <div class="set-score">
+                                    <span class="set-label">Set 1</span>
+                                    <input type="number" class="score-input" id="teamASet1" min="0" max="21">
+                                </div>
+                                <div class="set-score">
+                                    <span class="set-label">Set 2</span>
+                                    <input type="number" class="score-input" id="teamASet2" min="0" max="21">
+                                </div>
+                                <div class="set-score">
+                                    <span class="set-label">Set 3</span>
+                                    <input type="number" class="score-input" id="teamASet3" min="0" max="21">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="team-score">
+                            <h4>Team B</h4>
+                            <div class="score-grid">
+                                <div class="set-score">
+                                    <span class="set-label">Set 1</span>
+                                    <input type="number" class="score-input" id="teamBSet1" min="0" max="21">
+                                </div>
+                                <div class="set-score">
+                                    <span class="set-label">Set 2</span>
+                                    <input type="number" class="score-input" id="teamBSet2" min="0" max="21">
+                                </div>
+                                <div class="set-score">
+                                    <span class="set-label">Set 3</span>
+                                    <input type="number" class="score-input" id="teamBSet3" min="0" max="21">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="scoring-actions">
+                        <button class="btn btn-primary" id="saveScoreBtn">Save Score</button>
+                        <button class="btn btn-secondary" id="resetScoreBtn">Reset Score</button>
+                        <button class="btn btn-danger" id="newMatchBtn">New Match</button>
+                    </div>
+                    
+                    <div class="match-history">
+                        <h4>Match History</h4>
+                        <div class="history-list" id="historyList">
+                            <!-- Match history will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel -->
+            <div class="admin-panel" id="adminPanel">
+                <div class="panel-content">
+                    <div class="panel-header">
+                        <h3>Admin Panel</h3>
+                        <button class="close-btn" id="closeAdminPanel">&times;</button>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div class="login-form" id="loginForm">
+                        <h4>Login</h4>
+                        <div class="form-group">
+                            <label for="username">Username:</label>
+                            <input type="text" id="username" placeholder="admin">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password:</label>
+                            <input type="password" id="password" placeholder="admin123">
+                        </div>
+                        <button class="btn btn-primary" id="loginBtn">Login</button>
+                    </div>
+
+                    <!-- Admin Controls -->
+                    <div class="admin-controls" id="adminControls" style="display: none;">
+                        <h4>Court Management</h4>
+                        
+                        <!-- Add Court -->
+                        <div class="form-group">
+                            <label for="newCourtId">Court ID:</label>
+                            <input type="text" id="newCourtId" placeholder="court_1">
+                        </div>
+                        <div class="form-group">
+                            <label for="newCourtName">Court Name:</label>
+                            <input type="text" id="newCourtName" placeholder="Court 1">
+                        </div>
+                        <button class="btn btn-primary" id="addCourtBtn">Add Court</button>
+
+                        <hr>
+
+                        <!-- Add Camera -->
+                        <h5>Add Camera</h5>
+                        <div class="form-group">
+                            <label for="cameraCourtId">Court ID:</label>
+                            <select id="cameraCourtId">
+                                <!-- Courts will be populated here -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="newCameraId">Camera ID:</label>
+                            <input type="number" id="newCameraId" placeholder="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="newCameraName">Camera Name:</label>
+                            <input type="text" id="newCameraName" placeholder="Camera 1">
+                        </div>
+                        <div class="form-group">
+                            <label for="newCameraPosition">Position:</label>
+                            <select id="newCameraPosition">
+                                <option value="north">North</option>
+                                <option value="south">South</option>
+                                <option value="east">East</option>
+                                <option value="west">West</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="addCameraBtn">Add Camera</button>
+
+                        <hr>
+
+                        <!-- System Status -->
+                        <h5>System Status</h5>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="status-label">Total Courts:</span>
+                                <span class="status-value" id="totalCourts">0</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Active Streams:</span>
+                                <span class="status-value" id="activeStreams">0</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Total Cameras:</span>
+                                <span class="status-value" id="totalCameras">0</span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-secondary" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="settings-panel" id="settingsPanel">
+                <div class="panel-content">
+                    <div class="panel-header">
+                        <h3>Settings</h3>
+                        <button class="close-btn" id="closeSettingsPanel">&times;</button>
+                    </div>
+                    
+                    <div class="settings-content">
+                        <h4>Theme Settings</h4>
+                        <div class="form-group">
+                            <label for="themeSelect">Color Theme:</label>
+                            <select id="themeSelect">
+                                <option value="default">Default</option>
+                                <option value="dark">Dark</option>
+                                <option value="light">Light</option>
+                                <option value="sport">Sport</option>
+                            </select>
+                        </div>
+                        
+                        <h4>Display Settings</h4>
+                        <div class="form-group">
+                            <label for="autoRefresh">Auto Refresh:</label>
+                            <input type="checkbox" id="autoRefresh" checked>
+                        </div>
+                        <div class="form-group">
+                            <label for="refreshInterval">Refresh Interval (seconds):</label>
+                            <input type="number" id="refreshInterval" value="5" min="1" max="60">
+                        </div>
+                        
+                        <h4>Notification Settings</h4>
+                        <div class="form-group">
+                            <label for="enableNotifications">Enable Notifications:</label>
+                            <input type="checkbox" id="enableNotifications" checked>
+                        </div>
+                        <div class="form-group">
+                            <label for="soundAlerts">Sound Alerts:</label>
+                            <input type="checkbox" id="soundAlerts" checked>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay for panels -->
+            <div class="overlay" id="overlay"></div>
+        </main>
+    </div>
+
+    <!-- Templates -->
+    <template id="courtTemplate">
+        <div class="court-card">
+            <div class="court-header">
+                <h3 class="court-name"></h3>
+                <div class="court-controls">
+                    <span class="court-status"></span>
+                    <button class="btn btn-small btn-primary scoring-btn">Scoring</button>
+                    <button class="btn btn-small btn-danger delete-court-btn">Delete</button>
+                </div>
+            </div>
+            <div class="court-content">
+                <div class="cameras-grid">
+                    <!-- Cameras will be added here -->
+                </div>
+                <div class="court-actions">
+                    <button class="btn btn-primary view-court-btn">View Court</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="cameraTemplate">
+        <div class="camera-item">
+            <div class="camera-info">
+                <span class="camera-name"></span>
+                <span class="camera-position"></span>
+            </div>
+            <div class="camera-status">
+                <span class="status-indicator"></span>
+                <span class="status-text"></span>
+            </div>
+            <div class="camera-actions">
+                <button class="btn btn-small btn-primary view-feed-btn">View</button>
+                <button class="btn btn-small btn-danger delete-camera-btn">Delete</button>
+            </div>
+        </div>
+    </template>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+flask
+flask_socketio
+flask_cors
+eventlet
+redis
+numpy
+opencv-python-headless
+ultralytics
+torch
+shapely
