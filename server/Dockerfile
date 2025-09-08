@@ -1,27 +1,49 @@
-# Dockerfile
+# Dockerfile: Production-Ready, Final Version
 
-# Step 1: Start with a basic Linux computer that has Python 3.9 installed.
+# Start from the official Python 3.9 slim base image.
 FROM python:3.9-slim
 
-# Step 2: Set the working directory inside the container to /app.
+# Set the main working directory inside the container.
 WORKDIR /app
 
-# Step 3: Install the Supervisor program into the container's operating system.
-RUN apt-get update && apt-get install -y supervisor
+# --- Install ALL System-Level Dependencies (Layer 1) ---
+RUN apt-get update && apt-get install -y \
+    # Core essentials
+    build-essential \
+    git \
+    # Process manager
+    supervisor \
+    # Multimedia and graphics libraries required by OpenCV
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libgl1 \
+    libglx-mesa0 \
+    libglib2.0-0 \
+    # Libraries for handling image formats
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    # Libraries for handling video codecs
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    # Other common CV dependencies
+    libgtk2.0-dev \
+    redis-tools \
+    # Clean up apt cache to keep image size smaller
+    && rm -rf /var/lib/apt/lists/*
 
-# Step 4: Copy ONLY the requirements file first.
-# (This is a Docker optimization: if this file doesn't change, Docker can skip reinstalling libraries on future builds.)
+# Copy the Python requirements file.
 COPY requirements.txt .
 
-# Step 5: Install all the Python libraries from the requirements file.
+# --- Install ALL Python-Level Dependencies (Layer 2) ---
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Step 6: Now, copy all of your project files (like the 'app' folder) into the container.
-COPY . .
-
-# Step 7: Copy your Supervisor configuration file into the location where Supervisor expects to find it.
+# Copy your application code and assets.
+COPY app/ .
+COPY models/ ./models/
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Step 8: Set the default command for the entire container.
-# This tells Docker to start Supervisor, which will then start your two Python scripts.
+# Set the final command to start supervisor.
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

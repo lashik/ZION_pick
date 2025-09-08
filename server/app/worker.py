@@ -6,14 +6,26 @@ import cv2
 import numpy as np
 import redis
 import torch
-
+import os
 from inference import load_models, predict_bounce, in_out_on_bounce
 from config import BALL_MODEL_PATH, BOUNCE_MODEL_PATH, YOLO_CONF
+# Get the current working directory where this script is running
+current_working_directory = os.getcwd()
+print(f"[WORKER DEBUG] Current Working Directory: {current_working_directory}")
 
+# Define the relative path to the model
+relative_model_path = "models/best.pt"
+# Resolve it to a full, absolute path
+absolute_model_path = os.path.abspath(relative_model_path)
+print(f"[WORKER DEBUG] Absolute path to model: {absolute_model_path}")
+# --- END OF DEBUG CODE ---
+
+
+print("[WORKER] Starting AI Inference Worker...")
 print("[WORKER] Starting AI Inference Worker...", flush=True)
 
 try:
-    redis_client = redis.Redis(host='localhost', port=6379, db=0)
+    redis_client = redis.from_url("redis://default:bRKOb61oUhjqZ8IzEBM52SoQLm18bTQx@redis-12374.c330.asia-south1-1.gce.redns.redis-cloud.com:12374")
     redis_client.ping()
     print("[WORKER] Connected to Redis.", flush=True)
 except redis.exceptions.ConnectionError as e:

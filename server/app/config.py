@@ -1,8 +1,10 @@
+import os
 # Pickleball AI Server Configuration
+MODELS_DIR = os.environ.get("MODELS_DIR", "/app/models")
 
-# Model paths
-BALL_MODEL_PATH = "C:/Users/Kafka/Desktop/Pickleball/True/server/models/best.pt"
-BOUNCE_MODEL_PATH = "C:/Users/Kafka/Desktop/Pickleball/True/server/models/bounce_model.pt"
+# Use os.path.join to build the paths in an OS-agnostic way.
+BALL_MODEL_PATH = os.path.join(MODELS_DIR, "best.pt")
+BOUNCE_MODEL_PATH = os.path.join(MODELS_DIR, "bounce_model.pt")
 
 # Detection confidence
 YOLO_CONF = 0.25

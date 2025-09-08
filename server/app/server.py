@@ -21,13 +21,14 @@ app.config.setdefault("SESSION_COOKIE_SECURE", False)
 ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:8081",
-    "http://192.168.1.7:8080",
-    "http://192.168.1.7:8081",
-    "http://192.168.1.7:8000" # CHANGE THIS
+    "http://192.168.1.15:8080",
+    "http://192.168.1.15:8081",
+    "http://192.168.1.15:8000",
+    "https://0nex2fx18j42ro-8000.proxy.runpod.net"# CHANGE THIS
 ]
 
 from flask_cors import CORS
-CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
+CORS(app, origins="*", supports_credentials=True)
 
 def _select_async_mode():
     for mode in ("eventlet", "gevent", "threading"):
@@ -39,10 +40,10 @@ def _select_async_mode():
     return "threading"
 
 ASYNC_MODE = _select_async_mode()
-socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 try:
-    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_client = redis.from_url("redis://default:bRKOb61oUhjqZ8IzEBM52SoQLm18bTQx@redis-12374.c330.asia-south1-1.gce.redns.redis-cloud.com:12374")
     redis_client.ping()
     print("[INFO] Connected to Redis.", flush=True)
 except redis.exceptions.ConnectionError as e:
@@ -250,7 +251,7 @@ def listen_for_results():
         if message['type'] == 'message':
             result = json.loads(message['data'])
             # We use socketio.emit to send from the background thread
-            socketio.emit("decision", result, namespace="/webapp", broadcast=True)
+            socketio.emit("decision", result, namespace="/webapp")
 
 
 @socketio.on("request_replay", namespace = "/webapp")
