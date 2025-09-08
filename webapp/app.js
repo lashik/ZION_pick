@@ -3,7 +3,7 @@
 class PickleballApp {
     constructor() {
         // --- Configuration ---
-        const serverIp = '192.168.1.7:8000'; // CHANGE THIS to your server laptop's IP address
+        const serverIp = 'https://0nex2fx18j42ro-8000.proxy.runpod.net'; // CHANGE THIS to your server laptop's IP address
 
         // Base URL for all standard HTTP API calls (fetch)
         this.apiUrl = `http://${serverIp}`;
